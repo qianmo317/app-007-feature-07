@@ -12,9 +12,10 @@ interface Props {
   onDragStart: (id: string | null) => void;
   conflictMap: Map<string, string[]>;
   onUpdate?: (guest: Guest) => void;
+  onBatchAdd?: (guests: Guest[]) => void;
 }
 
-export default function GuestPool({ guests, selectedId, onSelect, onAdd, onRemove, onDragStart, conflictMap, onUpdate }: Props) {
+export default function GuestPool({ guests, selectedId, onSelect, onAdd, onRemove, onDragStart, conflictMap, onUpdate, onBatchAdd }: Props) {
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
   const [filterTag, setFilterTag] = useState<string>('');
@@ -22,10 +23,16 @@ export default function GuestPool({ guests, selectedId, onSelect, onAdd, onRemov
 
   const handleImport = () => {
     const parsed = parseGuestsText(importText);
-    for (const p of parsed) {
-      const validTags = p.tags.filter((t) => TAG_OPTIONS.includes(t));
-      onAdd({ id: generateId(), name: p.name, tags: validTags, partySize: 1 });
-    }
+    const newGuests = parsed.map((p) => ({
+      id: generateId(),
+      name: p.name,
+      tags: p.tags.filter((t) => TAG_OPTIONS.includes(t)),
+      partySize: 1,
+    }));
+    if (newGuests.length === 0) return;
+    // 一次批量导入只记一条撤销记录
+    if (onBatchAdd) onBatchAdd(newGuests);
+    else newGuests.forEach(onAdd);
     setImportText('');
     setShowImport(false);
   };

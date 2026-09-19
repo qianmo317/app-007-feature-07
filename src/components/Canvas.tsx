@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Plan, Table, Command } from '../types';
 import { generateId } from '../utils';
+import type { PushOptions } from '../history';
 
 interface Props {
   plan: Plan;
   dragGuestId: string | null;
   setDragGuestId: (id: string | null) => void;
   conflictMap: Map<string, string[]>;
-  dispatch: (cmd: Command) => void;
+  dispatch: (cmd: Command, options?: PushOptions) => void;
 }
 
 export default function Canvas({ plan, dragGuestId, setDragGuestId, conflictMap, dispatch }: Props) {
@@ -58,10 +59,14 @@ export default function Canvas({ plan, dragGuestId, setDragGuestId, conflictMap,
       if (!draggingTable) return;
       const x = e.clientX - dragOffset.x;
       const y = e.clientY - dragOffset.y;
-      dispatch({
-        type: 'updateTable',
-        table: { ...plan.tables.find((t) => t.id === draggingTable)!, x: Math.max(0, x), y: Math.max(0, y) },
-      });
+      dispatch(
+        {
+          type: 'updateTable',
+          table: { ...plan.tables.find((t) => t.id === draggingTable)!, x: Math.max(0, x), y: Math.max(0, y) },
+        },
+        // 整次拖桌过程合成一条历史
+        { coalesceKey: `table-move:${draggingTable}` },
+      );
     };
     const onUp = () => setDraggingTable(null);
     window.addEventListener('mousemove', onMove);
@@ -135,7 +140,12 @@ export default function Canvas({ plan, dragGuestId, setDragGuestId, conflictMap,
                 {isSelected ? (
                   <input
                     value={table.label}
-                    onChange={(e) => dispatch({ type: 'updateTable', table: { ...table, label: e.target.value } })}
+                    onChange={(e) =>
+                      dispatch(
+                        { type: 'updateTable', table: { ...table, label: e.target.value } },
+                        { coalesceKey: `table-label:${table.id}` },
+                      )
+                    }
                     onClick={(e) => e.stopPropagation()}
                     style={{ width: 80, fontSize: 13 }}
                   />
@@ -153,7 +163,10 @@ export default function Canvas({ plan, dragGuestId, setDragGuestId, conflictMap,
                     max={20}
                     onChange={(e) => {
                       const val = parseInt(e.target.value) || table.capacity;
-                      dispatch({ type: 'updateTable', table: { ...table, capacity: Math.max(table.seatOrder.length, Math.min(20, val)) } });
+                      dispatch(
+                        { type: 'updateTable', table: { ...table, capacity: Math.max(table.seatOrder.length, Math.min(20, val)) } },
+                        { coalesceKey: `table-capacity:${table.id}` },
+                      );
                     }}
                     style={{ width: 40, marginLeft: 4 }}
                   />

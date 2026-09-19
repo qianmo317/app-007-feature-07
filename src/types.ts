@@ -48,6 +48,6 @@ export type Command =
   | { type: 'addTable'; table: Table }
   | { type: 'removeTable'; tableId: string }
   | { type: 'moveGuest'; guestId: string; fromTableId: string | null; toTableId: string | null; toIndex?: number }
-  | { type: 'batch'; commands: Command[] };
+  | { type: 'batch'; commands: Command[]; label?: string };
 
 export const TAG_OPTIONS = ['男方亲属', '女方亲属', '同事', '同学', '儿童', '素食'];

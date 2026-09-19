@@ -163,6 +163,46 @@ html, body, #root {
   cursor: not-allowed;
 }
 
+/* 撤销 / 重做：按钮 + 每一步的人话描述 */
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.history-group {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.history-row button {
+  margin-left: 0;
+}
+
+.history-row button + button {
+  margin-left: 6px;
+}
+
+.history-hints {
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 320px;
+}
+
+.history-hint {
+  color: #555;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-hint.at-end {
+  color: #aaa;
+}
+
 .stats-bar {
   display: flex;
   gap: 24px;
