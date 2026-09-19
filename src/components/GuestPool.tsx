@@ -8,13 +8,14 @@ interface Props {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onAdd: (guest: Guest) => void;
+  onBatchAdd?: (guests: Guest[]) => void;
   onRemove: (guestId: string) => void;
   onDragStart: (id: string | null) => void;
   conflictMap: Map<string, string[]>;
   onUpdate?: (guest: Guest) => void;
 }
 
-export default function GuestPool({ guests, selectedId, onSelect, onAdd, onRemove, onDragStart, conflictMap, onUpdate }: Props) {
+export default function GuestPool({ guests, selectedId, onSelect, onAdd, onBatchAdd, onRemove, onDragStart, conflictMap, onUpdate }: Props) {
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
   const [filterTag, setFilterTag] = useState<string>('');
@@ -22,9 +23,17 @@ export default function GuestPool({ guests, selectedId, onSelect, onAdd, onRemov
 
   const handleImport = () => {
     const parsed = parseGuestsText(importText);
-    for (const p of parsed) {
-      const validTags = p.tags.filter((t) => TAG_OPTIONS.includes(t));
-      onAdd({ id: generateId(), name: p.name, tags: validTags, partySize: 1 });
+    const imported: Guest[] = parsed
+      .map((p) => ({
+        id: generateId(),
+        name: p.name,
+        tags: p.tags.filter((t) => TAG_OPTIONS.includes(t)),
+        partySize: 1,
+      }));
+    if (imported.length > 0) {
+      // 一次导入只产生一条历史记录
+      if (onBatchAdd) onBatchAdd(imported);
+      else imported.forEach(onAdd);
     }
     setImportText('');
     setShowImport(false);

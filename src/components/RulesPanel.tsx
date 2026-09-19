@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import type { Plan, Rule, Command, RuleType } from '../types';
+import type { Plan, Rule, DispatchFn, RuleType } from '../types';
 import { generateId } from '../utils';
 
 interface Props {
   plan: Plan;
-  dispatch: (cmd: Command) => void;
+  dispatch: DispatchFn;
 }
 
 export default function RulesPanel({ plan, dispatch }: Props) {

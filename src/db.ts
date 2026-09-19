@@ -1,8 +1,10 @@
 import type { Plan } from './types';
+import type { HistorySnapshot } from './history';
 
 const DB_NAME = 'WeddingSeatingPlanner';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'plans';
+const HISTORY_STORE_NAME = 'history';
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -13,6 +15,10 @@ function openDB(): Promise<IDBDatabase> {
       const db = (e.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(HISTORY_STORE_NAME)) {
+        // 每个方案一份撤销/重做历史，刷新页面后仍可继续撤销
+        db.createObjectStore(HISTORY_STORE_NAME, { keyPath: 'planId' });
       }
     };
   });
@@ -55,11 +61,31 @@ export async function savePlan(plan: Plan): Promise<void> {
 export async function deletePlan(id: string): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.delete(id);
-    req.onsuccess = () => resolve();
+    const tx = db.transaction([STORE_NAME, HISTORY_STORE_NAME], 'readwrite');
+    tx.objectStore(STORE_NAME).delete(id);
+    tx.objectStore(HISTORY_STORE_NAME).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+export async function getHistory(planId: string): Promise<HistorySnapshot | null> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HISTORY_STORE_NAME, 'readonly');
+    const req = tx.objectStore(HISTORY_STORE_NAME).get(planId);
+    req.onsuccess = () => resolve((req.result as HistorySnapshot | undefined) ?? null);
     req.onerror = () => reject(req.error);
+  });
+}
+
+export async function saveHistory(snapshot: HistorySnapshot): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HISTORY_STORE_NAME, 'readwrite');
+    tx.objectStore(HISTORY_STORE_NAME).put(snapshot);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
   });
 }
 

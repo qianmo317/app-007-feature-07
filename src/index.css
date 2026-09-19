@@ -163,6 +163,30 @@ html, body, #root {
   cursor: not-allowed;
 }
 
+.history-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 12px;
+}
+
+.history-hint {
+  font-size: 12px;
+  color: #6b5d4f;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-hint.at-end {
+  color: #aaa;
+}
+
+.history-btn:disabled {
+  color: #aaa;
+}
+
 .stats-bar {
   display: flex;
   gap: 24px;

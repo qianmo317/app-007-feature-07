@@ -50,4 +50,13 @@ export type Command =
   | { type: 'moveGuest'; guestId: string; fromTableId: string | null; toTableId: string | null; toIndex?: number }
   | { type: 'batch'; commands: Command[] };
 
+export type DispatchOptions = {
+  /** 连续相同 key 的操作在时间窗内合并成一条（如同一个人的连续拖动、连续改名） */
+  coalesceKey?: string;
+  coalesceWindowMs?: number;
+  label?: string;
+};
+
+export type DispatchFn = (cmd: Command, options?: DispatchOptions) => void;
+
 export const TAG_OPTIONS = ['男方亲属', '女方亲属', '同事', '同学', '儿童', '素食'];
